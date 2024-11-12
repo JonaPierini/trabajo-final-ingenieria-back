@@ -36,7 +36,12 @@ export const ProductRoute = () => {
       check("value", "El precio es obligatorio").not().isEmpty(),
       check("stock", "El stock es obligatorio").not().isEmpty(),
       check("description", "La descripción es obligatorio").not().isEmpty(),
-      check("category", "La categoria es es obligatorio").not().isEmpty(),
+      check(
+        "category",
+        "La categoria en la cual va a pertenecer el producto es obligatorio"
+      )
+        .not()
+        .isEmpty(),
       validate,
     ],
     productController.CreateProduct

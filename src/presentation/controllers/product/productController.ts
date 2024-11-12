@@ -55,11 +55,14 @@ export class ProductController {
 
     const category = req.body.category.toUpperCase();
 
-    const categoryDB = await CategoryModel.findOne({ name: category });
+    const categoryDB = await CategoryModel.findOne({
+      name: category,
+      state: true,
+    });
 
     if (!categoryDB) {
       return res.status(400).json({
-        msg: `La cetegoria no existe`,
+        msg: `La cetegoria no existe o su estado es falso`,
       });
     }
 
