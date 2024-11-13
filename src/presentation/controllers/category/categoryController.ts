@@ -91,7 +91,7 @@ export class CategoryController {
     const category = await CategoryModel.findByIdAndUpdate(
       id,
       { state: false },
-      //con el new devuelvo el valor del usuario actualizado
+      //con el new devuelvo el valor de la categoria actualizado
       { new: true }
     );
     res.status(200).json({

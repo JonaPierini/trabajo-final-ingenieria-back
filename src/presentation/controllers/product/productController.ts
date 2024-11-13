@@ -43,7 +43,7 @@ export class ProductController {
   public CreateProduct = async (req: Request, res: Response) => {
     //Crear producto - privado - con token valido
 
-    const name = req.body.name.toUpperCase();
+    const name = req.body.name.toUpperCase().trim();
 
     const productDB = await ProductoModel.findOne({ name });
 
@@ -53,28 +53,15 @@ export class ProductController {
       });
     }
 
-    const category = req.body.category.toUpperCase();
-
-    const categoryDB = await CategoryModel.findOne({
-      name: category,
-      state: true,
-    });
-
-    if (!categoryDB) {
-      return res.status(400).json({
-        msg: `La cetegoria no existe o su estado es falso`,
-      });
-    }
-
-    //Generar la data en db
+    //Generar la data en db le que le pasamos es en el body la category: y el valor es el id de esa categoria
     const newProducto = await ProductoModel.create({
-      name: req.body.name.toUpperCase(),
+      name: req.body.name.toUpperCase().trim(),
       state: req.body.state,
       value: req.body.value,
       stock: req.body.stock,
       description: req.body.description,
       user: req.body.user._id,
-      category: categoryDB._id,
+      category: req.body.category,
     });
 
     //Guarda en bd que no haria falta pq ya arriba se esta creando
@@ -90,20 +77,12 @@ export class ProductController {
   public PutProduct = async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    //Actualizo el name, el value, el stock
+    //Actualizo el name, el value, (precio) el stock
     const upDateProduct = {
-      name: req.body.name.toUpperCase(),
+      name: req.body.name.toUpperCase().trim(),
       value: req.body.value,
       stock: req.body.stock,
     };
-
-    const productDB = await ProductoModel.findOne({ name: upDateProduct.name });
-
-    if (productDB) {
-      return res.status(400).json({
-        msg: `El producto ya existe en la base de datos - ver estado`,
-      });
-    }
 
     // Actualizar el producto y devolver el documento actualizado
     const product = await ProductoModel.findByIdAndUpdate(id, upDateProduct, {
@@ -119,7 +98,7 @@ export class ProductController {
     const product = await ProductoModel.findByIdAndUpdate(
       id,
       { state: false },
-      //con el new devuelvo el valor del usuario actualizado
+      //con el new devuelvo el valor del producto actualizado
       { new: true }
     );
     res.status(200).json({
