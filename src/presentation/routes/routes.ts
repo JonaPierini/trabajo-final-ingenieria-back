@@ -3,6 +3,7 @@ import { UserRoute } from "./UsersRoutes/UsersRoutes";
 import { AuthRoute } from "./AuthRoutes/AuthRoutes";
 import { CategoryRoute } from "./CategoryRoutes/CategoryRoutes";
 import { ProductRoute } from "./ProductRoutes/ProductRoutes";
+import { SearchRoute } from "./SearchRoutes/SearchRoutes";
 
 export class AppRoutes {
   static get routes(): Router {
@@ -19,6 +20,9 @@ export class AppRoutes {
 
     //PRODUCT
     router.use("/api", ProductRoute());
+
+    //SEARCH
+    router.use("/api", SearchRoute());
 
     return router;
   }

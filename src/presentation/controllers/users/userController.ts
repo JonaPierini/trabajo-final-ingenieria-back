@@ -29,7 +29,7 @@ export class UserController {
   //CREATE NEW USER
   public NewUser = async (req: Request, res: Response) => {
     const newUser = await UserModel.create({
-      name: req.body.name,
+      name: req.body.name.toUpperCase(),
       email: req.body.email,
       rol: req.body.rol,
       state: req.body.state,
