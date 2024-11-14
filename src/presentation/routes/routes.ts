@@ -4,6 +4,7 @@ import { AuthRoute } from "./AuthRoutes/AuthRoutes";
 import { CategoryRoute } from "./CategoryRoutes/CategoryRoutes";
 import { ProductRoute } from "./ProductRoutes/ProductRoutes";
 import { SearchRoute } from "./SearchRoutes/SearchRoutes";
+import { ClientRoute } from "./ClientRoutes/ClientRoutes";
 
 export class AppRoutes {
   static get routes(): Router {
@@ -23,6 +24,9 @@ export class AppRoutes {
 
     //SEARCH
     router.use("/api", SearchRoute());
+
+    //CLIENT
+    router.use("/api", ClientRoute());
 
     return router;
   }

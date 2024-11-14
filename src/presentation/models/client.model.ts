@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 //Aca voy a definir mis entidades (que seria mis talbas de la base de datos)
 
-const userSchema = new mongoose.Schema({
+const clientSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -11,18 +11,17 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  password: {
+  address: {
     type: String,
     required: true,
   },
-  rol: {
+  location: {
     type: String,
-    emun: ["ADMIN_ROLE", "USER_ROLE"],
-    default: "USER_ROLE", // Si no se proporciona, se usará User_Role
+    required: true,
   },
-  state: {
-    type: Boolean,
-    default: true,
+  provinces: {
+    type: String,
+    required: true,
   },
   createdAt: {
     type: Date,
@@ -32,4 +31,4 @@ const userSchema = new mongoose.Schema({
 
 //CON ESTE ESQUEMA CREO MI MODELO QUE VA A SER COMO INTERACTUO CON LA BASE DE DATOS
 
-export const UserModel = mongoose.model("User", userSchema);
+export const ClientModel = mongoose.model("Client", clientSchema);

@@ -11,10 +11,10 @@ export const UserRoute = () => {
   const router = Router();
 
   //Instanciamos el controlador de User
-  const userControloer = new UserController();
+  const userController = new UserController();
 
   //GET ALL USER
-  router.get("/allUsers", userControloer.AllUsers);
+  router.get("/allUsers", userController.AllUsers);
 
   //GET BY ID
   router.get(
@@ -24,11 +24,11 @@ export const UserRoute = () => {
       check("email").custom(UserEmailExist),
       validate,
     ],
-    userControloer.UserById
+    userController.UserById
   );
 
   //GET USER BY LIMIT
-  router.get("/pagination", userControloer.PaginationUser);
+  router.get("/pagination", userController.PaginationUser);
 
   //CREATE USER
   //ESE CHECK HACE LAS VALIDACIONES CONFORME ESTAN EN EL MODELO y CONFORME LO MANDO EN EL BODY. Por ejemplo si en el modelo usa name, en el check no puedo usar nombre
@@ -50,7 +50,7 @@ export const UserRoute = () => {
       //Validate es una funcion que permite manejar los errores
       validate,
     ],
-    userControloer.NewUser
+    userController.NewUser
   );
 
   //UPDATE USER
@@ -72,7 +72,7 @@ export const UserRoute = () => {
       check("rol", "No es un rol válido").isIn(["ADMIN_ROLE", "USER_ROLE"]),
       validate,
     ],
-    userControloer.PutUser
+    userController.PutUser
   );
 
   //DELETE USER
@@ -85,7 +85,7 @@ export const UserRoute = () => {
       check("id").custom(UserIdExist),
       validate,
     ],
-    userControloer.DeleteUser
+    userController.DeleteUser
   );
 
   //DELETE USER BD
@@ -99,7 +99,7 @@ export const UserRoute = () => {
       check("id").custom(UserIdExist),
       validate,
     ],
-    userControloer.DeleteUserDB
+    userController.DeleteUserDB
   );
 
   return router;
