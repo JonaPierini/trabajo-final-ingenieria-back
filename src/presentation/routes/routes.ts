@@ -1,10 +1,11 @@
 import { Router } from "express";
-import { UserRoute } from "./UsersRoutes/UsersRoutes";
+import { UserRoute } from "./UsersRoutes/UserRoutes";
 import { AuthRoute } from "./AuthRoutes/AuthRoutes";
 import { CategoryRoute } from "./CategoryRoutes/CategoryRoutes";
 import { ProductRoute } from "./ProductRoutes/ProductRoutes";
 import { SearchRoute } from "./SearchRoutes/SearchRoutes";
 import { ClientRoute } from "./ClientRoutes/ClientRoutes";
+import { BudgetRoute } from "./BudgetRoutes/BudgetRoutes";
 
 export class AppRoutes {
   static get routes(): Router {
@@ -27,6 +28,9 @@ export class AppRoutes {
 
     //CLIENT
     router.use("/api", ClientRoute());
+
+    //BUDGET
+    router.use("/api", BudgetRoute());
 
     return router;
   }

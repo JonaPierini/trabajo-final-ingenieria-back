@@ -41,4 +41,4 @@ const productoSchema = new mongoose.Schema({
 
 //CON ESTE ESQUEMA CREO MI MODELO QUE VA A SER COMO INTERACTUO CON LA BASE DE DATOS
 
-export const ProductoModel = mongoose.model("Produc", productoSchema);
+export const ProductoModel = mongoose.model("Product", productoSchema);

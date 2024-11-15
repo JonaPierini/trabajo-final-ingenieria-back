@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { ProductoModel } from "../../models/product.model";
-import { CategoryModel } from "../../models/category.model";
 
 export class ProductController {
   constructor() {}
