@@ -7,7 +7,7 @@ import { isValidObjectId } from "mongoose";
 export class SearchController {
   constructor() {}
 
-  //BUSCAR => http://localhost:8000/api/produc/6734e5a081b9e11320c880da
+  //BUSCAR => http://localhost:8000/api/search/produc/6734e5a081b9e11320c880da
   public searchAll = async (req: Request, res: Response) => {
     const colectionExist = ["category", "user", "produc"];
     const { colection, id } = req.params;

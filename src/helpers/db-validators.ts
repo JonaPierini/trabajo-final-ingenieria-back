@@ -53,3 +53,15 @@ export const ClientEmailExist = async (email: String) => {
     throw new Error(`El correo: ${email}, ya está registrado`);
   }
 };
+
+export const ClientIdExist = async (id: String) => {
+  // Verificar si el id es válido respcto al validObjetId
+  if (!isValidObjectId(id)) {
+    throw new Error(`El id: ${id}, no es un ObjectId válido.`);
+  }
+  // Verificar si el ID existe
+  const userId = await ClientModel.findById(id);
+  if (!userId) {
+    throw new Error(`El id: ${id}, no existe en la BD`);
+  }
+};

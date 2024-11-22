@@ -21,7 +21,7 @@ export const UserRoute = () => {
     "/userById/:id",
     [
       check("id", "No es un ID válido").isMongoId(),
-      check("email").custom(UserEmailExist),
+      check("id").custom(UserIdExist),
       validate,
     ],
     userController.UserById

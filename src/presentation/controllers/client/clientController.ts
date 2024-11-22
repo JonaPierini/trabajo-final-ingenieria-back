@@ -14,6 +14,16 @@ export class ClientController {
     });
   };
 
+  //GET CLIENT BY ID
+  public ClientById = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const clientById = await ClientModel.findById(id);
+    res.json({
+      msg: "cliente encontrado: ",
+      clientById,
+    });
+  };
+
   //CREATE NEW CLIENT
   public NewClient = async (req: Request, res: Response) => {
     const newClient = await ClientModel.create({
@@ -32,6 +42,18 @@ export class ClientController {
     res.status(200).json({
       msg: "Nuevo cliente creado",
       newClient,
+    });
+  };
+
+  //DELETE CLIENT
+
+  public DeleteClientDB = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const client = await ClientModel.findByIdAndDelete(id);
+
+    res.status(200).json({
+      msg: "El cliente borrado fue",
+      client,
     });
   };
 }

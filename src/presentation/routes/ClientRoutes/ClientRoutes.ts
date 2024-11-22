@@ -2,7 +2,10 @@ import { Router } from "express";
 import { ClientController } from "../../controllers/client/clientController";
 import { check } from "express-validator";
 import { validate } from "../../../middlewares/validate";
-import { ClientEmailExist } from "../../../helpers/db-validators";
+import {
+  ClientEmailExist,
+  ClientIdExist,
+} from "../../../helpers/db-validators";
 
 export const ClientRoute = () => {
   const router = Router();
@@ -12,6 +15,17 @@ export const ClientRoute = () => {
 
   //GET ALL Client
   router.get("/allClient", clientController.AllClient);
+
+  //GET BY ID
+  router.get(
+    "/clientById/:id",
+    [
+      check("id", "No es un ID válido").isMongoId(),
+      check("id").custom(ClientIdExist),
+      validate,
+    ],
+    clientController.ClientById
+  );
 
   //CREATE CLIENT
   router.post(
@@ -29,6 +43,17 @@ export const ClientRoute = () => {
       validate,
     ],
     clientController.NewClient
+  );
+
+  //DELETE USER BD
+  router.delete(
+    "/deleteClientDB/:id",
+    [
+      check("id", "No es un ID válido").isMongoId(),
+      check("id").custom(ClientIdExist),
+      validate,
+    ],
+    clientController.DeleteClientDB
   );
 
   return router;

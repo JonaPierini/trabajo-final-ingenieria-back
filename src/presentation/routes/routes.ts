@@ -24,7 +24,7 @@ export class AppRoutes {
     router.use("/api", ProductRoute());
 
     //SEARCH
-    router.use("/api", SearchRoute());
+    router.use("/api/search", SearchRoute());
 
     //CLIENT
     router.use("/api", ClientRoute());
