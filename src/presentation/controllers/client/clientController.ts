@@ -45,6 +45,28 @@ export class ClientController {
     });
   };
 
+  //UPDATE CLIENT
+  public PutUClient = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    //Actualizo el  name, email, address, location, provinces
+    const upDateClient = {
+      name: req.body.name.toUpperCase(),
+      email: req.body.email,
+      address: req.body.address,
+      location: req.body.location,
+      provinces: req.body.provinces,
+    };
+
+    // Actualizar el cliente y devolver el documento actualizado
+    const client = await ClientModel.findByIdAndUpdate(id, upDateClient, {
+      new: true,
+    });
+    res.status(200).json({
+      msg: "El cliente fue actualizado con exito",
+      client,
+    });
+  };
+
   //DELETE CLIENT
 
   public DeleteClientDB = async (req: Request, res: Response) => {

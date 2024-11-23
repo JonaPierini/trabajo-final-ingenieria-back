@@ -45,7 +45,25 @@ export const ClientRoute = () => {
     clientController.NewClient
   );
 
-  //DELETE USER BD
+  //UPDATE CLIENT
+  //Actualizo el  name, email, address, location, provinces
+  router.put(
+    "/putClient/:id",
+    [
+      check("name", "El nombre no puede estar vacio").not().isEmpty(),
+      check("email", "El email no se puede cambiar").not().isEmpty(),
+      check("address", "La direccion no puede estar vaci").not().isEmpty(),
+      check("location", "La localidad no puede estar vacia").not().isEmpty(),
+      check("provinces", "La provincia no puede estar vacia").not().isEmpty(),
+      check("id", "No es un ID válido").isMongoId(),
+      check("email").custom(ClientEmailExist),
+      check("id").custom(ClientIdExist),
+      validate,
+    ],
+    clientController.PutUClient
+  );
+
+  //DELETE CLIENT BD
   router.delete(
     "/deleteClientDB/:id",
     [
