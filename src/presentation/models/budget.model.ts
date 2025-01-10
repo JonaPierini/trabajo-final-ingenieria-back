@@ -18,8 +18,13 @@ const budgetSchema = new mongoose.Schema({
   //DetallePresupuesto
   product: [
     {
-      product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+      productId: {
+        type: Schema.Types.ObjectId,
+        ref: "Product",
+        required: true,
+      },
       quantity: { type: Number, required: true, min: 1 },
+      name: { type: Schema.Types.String, ref: "Product", required: true },
     },
   ],
   total: {

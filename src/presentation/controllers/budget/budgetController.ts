@@ -47,25 +47,43 @@ export class BudgetController {
       });
     }
 
-    // Validación y conversión del productId
-    const productId = product[0].product;
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({
-        msg: "El productId no es válido",
-      });
+    // Validar cada productId
+    for (const p of product) {
+      if (!mongoose.Types.ObjectId.isValid(p.productId)) {
+        return res.status(400).json({
+          msg: `El productId ${p.productId} no es válido`,
+        });
+      }
+
+      const productDb = await ProductoModel.findById(p.productId);
+      if (!productDb) {
+        return res.status(400).json({
+          msg: `El producto con ID ${p.productId} no existe`,
+        });
+      }
     }
 
-    const productDb = await ProductoModel.findById(productId);
-    if (!productDb) {
-      return res.status(400).json({
-        msg: "El producto no existe",
-      });
-    }
+    // Obtener los productos de la base de datos
+    const productIds = product.map((p: any) => p.productId);
+    const productsFromDb = await ProductoModel.find({
+      _id: { $in: productIds },
+    });
+    // Calcular el total
+    let total = 0;
+    product.forEach((p: any) => {
+      const productData = productsFromDb.find(
+        (dbProduct) => dbProduct._id.toString() === p.productId
+      );
+      if (productData) {
+        total += productData.value * p.quantity;
+      }
+    });
 
     const NewBudget = await BudgetModel.create({
       user: req.body.user,
       client: req.body.client,
       product: req.body.product,
+      total: total,
     });
 
     //Guarda en bd
