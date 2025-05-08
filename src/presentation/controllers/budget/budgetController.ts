@@ -14,7 +14,7 @@ export class BudgetController {
       .populate("user")
       .populate("client")
       .populate({
-        path: "product.product", // Popular los detalles de cada producto
+        path: "product.productId", // Popular los detalles de cada producto
         model: "Product", // Modelo de producto referenciado
       });
     res.json({
