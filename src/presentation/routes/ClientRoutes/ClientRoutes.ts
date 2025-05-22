@@ -52,7 +52,7 @@ export const ClientRoute = () => {
     [
       check("name", "El nombre no puede estar vacio").not().isEmpty(),
       check("email", "El email no se puede cambiar").not().isEmpty(),
-      check("address", "La direccion no puede estar vaci").not().isEmpty(),
+      check("address", "La direccion no puede estar vacia").not().isEmpty(),
       check("location", "La localidad no puede estar vacia").not().isEmpty(),
       check("provinces", "La provincia no puede estar vacia").not().isEmpty(),
       check("id", "No es un ID válido").isMongoId(),

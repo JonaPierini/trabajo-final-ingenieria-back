@@ -28,7 +28,7 @@ export class ClientController {
   public NewClient = async (req: Request, res: Response) => {
     const newClient = await ClientModel.create({
       name: req.body.name.toUpperCase(),
-      email: req.body.email,
+      email: req.body.email.toLowerCase(),
       address: req.body.address,
       location: req.body.location,
       provinces: req.body.provinces,
@@ -51,7 +51,7 @@ export class ClientController {
     //Actualizo el  name, email, address, location, provinces
     const upDateClient = {
       name: req.body.name.toUpperCase(),
-      email: req.body.email,
+      email: req.body.email.toLowerCase(),
       address: req.body.address,
       location: req.body.location,
       provinces: req.body.provinces,

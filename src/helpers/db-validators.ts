@@ -48,7 +48,8 @@ export const ProductIdExist = async (id: String) => {
 };
 
 export const ClientEmailExist = async (email: String) => {
-  const emailExist = await ClientModel.findOne({ email });
+  const emailLower = email.toLowerCase(); // 🔽 convertís a minúsculas
+  const emailExist = await ClientModel.findOne({ email: emailLower });
   if (emailExist) {
     throw new Error(`El correo: ${email}, ya está registrado`);
   }
