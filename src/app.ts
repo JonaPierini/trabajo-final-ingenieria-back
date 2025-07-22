@@ -1,22 +1,10 @@
-import { DbConecction } from "./database/config"
-import { Server } from "./presentation/server"
-
-
-
+import { DbConnection } from "./database/config";
+import { Server } from "./presentation/server";
 
 (async () => {
-    main()
-})()
+  // CONEXIÓN A BASE DE DATOS (singleton)
+  await DbConnection.getInstance().connect();
 
-
-async function main() {
-
-    //CONEXION A BASE DE DATOS
-    const dbConnection = new DbConecction()
-    dbConnection.connection()
-
-    //CREACION DEL SERVIDOR
-    const server = new Server()
-    server.start()
-
-}
+  // INICIAR SERVIDOR
+  new Server().start();
+})();

@@ -35,6 +35,8 @@ export const UserRoute = () => {
   router.post(
     "/newUser",
     [
+      validateJWT, // Verifica que el token sea válido
+      validateRole, // Verifica que el usuario autenticado sea ADMIN_ROLE
       check("name", "El nombre es obligatorio").not().isEmpty(),
       check("email", "El email no puede estar vacio").not().isEmpty(),
       check("password", "El password no puede estar vacio").not().isEmpty(),

@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
   },
   rol: {
     type: String,
-    emun: ["ADMIN_ROLE", "USER_ROLE"],
+    enum: ["ADMIN_ROLE", "USER_ROLE"],
     default: "USER_ROLE", // Si no se proporciona, se usará User_Role
   },
   state: {
