@@ -3,6 +3,8 @@ import { UserModel } from "../presentation/models/user.model";
 import { CategoryModel } from "../presentation/models/category.model";
 import { ProductoModel } from "../presentation/models/product.model";
 import { ClientModel } from "../presentation/models/client.model";
+import { Request } from "express";
+import { Meta } from "express-validator";
 
 export const UserEmailExist = async (email: String) => {
   const emailExist = await UserModel.findOne({ email });
@@ -47,11 +49,21 @@ export const ProductIdExist = async (id: String) => {
   }
 };
 
-export const ClientEmailExist = async (email: String) => {
-  const emailLower = email.toLowerCase(); // 🔽 convertís a minúsculas
-  const emailExist = await ClientModel.findOne({ email: emailLower });
-  if (emailExist) {
-    throw new Error(`El correo: ${email}, ya está registrado`);
+// export const ClientEmailExist = async (email: String) => {
+//   const emailLower = email.toLowerCase(); // 🔽 convertís a minúsculas
+//   const emailExist = await ClientModel.findOne({ email: emailLower });
+//   if (emailExist) {
+//     throw new Error(`El correo: ${email}, ya está registrado`);
+//   }
+// };
+
+// Ahora acepta el `req` para acceder al ID del cliente que se edita
+export const ClientEmailExist = async (email: string, { req }: Meta) => {
+  const emailLower = email.toLowerCase();
+  const client = await ClientModel.findOne({ email: emailLower });
+
+  if (client && client._id.toString() !== req.params?.id) {
+    throw new Error(`El correo: ${email} ya está registrado por otro cliente.`);
   }
 };
 

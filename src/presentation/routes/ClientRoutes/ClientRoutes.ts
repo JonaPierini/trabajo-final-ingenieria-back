@@ -46,12 +46,12 @@ export const ClientRoute = () => {
   );
 
   //UPDATE CLIENT
-  //Actualizo el  name, email, address, location, provinces
+  //Actualizo el  name , address, location, provinces
   router.put(
     "/putClient/:id",
     [
       check("name", "El nombre no puede estar vacio").not().isEmpty(),
-      check("email", "El email no se puede cambiar").not().isEmpty(),
+      //      check("email", "El email no se puede cambiar").not().isEmpty(),
       check("address", "La direccion no puede estar vacia").not().isEmpty(),
       check("location", "La localidad no puede estar vacia").not().isEmpty(),
       check("provinces", "La provincia no puede estar vacia").not().isEmpty(),

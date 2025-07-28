@@ -46,23 +46,31 @@ export class ClientController {
   };
 
   //UPDATE CLIENT
+
   public PutUClient = async (req: Request, res: Response) => {
     const id = req.params.id;
-    //Actualizo el  name, email, address, location, provinces
+
+    // Buscamos el cliente actual por ID
+    const clienteActual = await ClientModel.findById(id);
+    if (!clienteActual) {
+      return res.status(404).json({ msg: "Cliente no encontrado" });
+    }
+
+    // Solo actualizamos los campos permitidos
     const upDateClient = {
       name: req.body.name.toUpperCase(),
-      email: req.body.email.toLowerCase(),
+      email: clienteActual.email, //  No permitimos que se modifique
       address: req.body.address,
       location: req.body.location,
       provinces: req.body.provinces,
     };
 
-    // Actualizar el cliente y devolver el documento actualizado
     const client = await ClientModel.findByIdAndUpdate(id, upDateClient, {
       new: true,
     });
+
     res.status(200).json({
-      msg: "El cliente fue actualizado con exito",
+      msg: "El cliente fue actualizado con éxito",
       client,
     });
   };

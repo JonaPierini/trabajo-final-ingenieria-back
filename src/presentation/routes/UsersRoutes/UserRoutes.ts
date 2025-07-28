@@ -59,19 +59,21 @@ export const UserRoute = () => {
   router.put(
     "/putUser/:id",
     [
-      check("name", "El nombre no se puede cambiar").isEmpty(),
+      validateJWT, // Verifica que el token sea válido
+      validateRole, // Verifica que el usuario autenticado sea ADMIN_ROLE
+      //      check("name", "El nombre no se puede cambiar").isEmpty(),
       check("email", "El email no se puede cambiar").isEmpty(),
       check("state", "El estado no puede estar vacio").not().isEmpty(),
-      check(
-        "password",
-        "El password no puede estar vacio y tiene que tener minimo 8 caracteres"
-      )
-        .not()
-        .isEmpty()
-        .isLength({ min: 8 }),
+      //      check(
+      //        "password",
+      //        "El password no puede estar vacio y tiene que tener minimo 8 caracteres"
+      //      )
+      //        .not()
+      //        .isEmpty()
+      //        .isLength({ min: 8 }),
       check("id", "No es un ID válido").isMongoId(),
       check("id").custom(UserIdExist),
-      check("rol", "No es un rol válido").isIn(["ADMIN_ROLE", "USER_ROLE"]),
+      //      check("rol", "No es un rol válido").isIn(["ADMIN_ROLE", "USER_ROLE"]),
       validate,
     ],
     userController.PutUser
