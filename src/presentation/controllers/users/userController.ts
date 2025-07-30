@@ -85,20 +85,47 @@ export class UserController {
 
   public PutUser = async (req: Request, res: Response) => {
     const id = req.params.id;
-    //Actualizo el  rol, state y password
+
+    const loggedUserId = req.body.user._id.toString(); // ID del usuario autenticado
+
+    // Impedir que el admin se edite a sí mismo
+    if (id === loggedUserId) {
+      return res.status(403).json({
+        msg: "No podés editarte a vos mismo desde esta ruta.",
+      });
+    }
+
+    const { name, email, rol, state } = req.body;
+
+    // Verificar si el email cambió
+    const userToUpdate = await UserModel.findById(id);
+    if (!userToUpdate) {
+      return res.status(404).json({ msg: "Usuario no encontrado." });
+    }
+
+    if (email && email !== userToUpdate.email) {
+      const emailExists = await UserModel.findOne({ email });
+      if (emailExists) {
+        return res.status(400).json({
+          msg: "Ya existe un usuario con ese email.",
+        });
+      }
+    }
+
+    //Actualizo el  rol, state, email y name
     const upDateUser = {
-      //name: req.body.name,
-      //email: req.body.email,
-      rol: req.body.rol,
-      password: req.body.password,
-      state: req.body.state,
+      name: name,
+      email: email,
+      rol: rol,
+      //password: req.body.password,
+      state: state,
       // createdAt: req.body.createdAt,
     };
-    if (upDateUser.password) {
-      // Encriptar la contraseña
-      const salt = bcrypt.genSaltSync();
-      upDateUser.password = bcrypt.hashSync(upDateUser.password, salt);
-    }
+    // if (upDateUser.password) {
+    //   // Encriptar la contraseña
+    //   const salt = bcrypt.genSaltSync();
+    //   upDateUser.password = bcrypt.hashSync(upDateUser.password, salt);
+    // }
 
     // Actualizar el usuario y devolver el documento actualizado
     const usuario = await UserModel.findByIdAndUpdate(id, upDateUser, {
