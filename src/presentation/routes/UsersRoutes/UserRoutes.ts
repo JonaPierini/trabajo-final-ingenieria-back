@@ -71,6 +71,22 @@ export const UserRoute = () => {
     userController.PutUser
   );
 
+  //PATCH USER => solo se puede editar el nombre y el password
+  router.patch(
+    "/patchUser/:id",
+    [
+      validateJWT, // Verifica que el token sea válido
+      check("id", "No es un ID válido").isMongoId(),
+      check("id").custom(UserIdExist),
+      check(
+        "password",
+        "El password tiene que tener minimo 8 caracteres"
+      ).isLength({ min: 8 }),
+      validate,
+    ],
+    userController.PatchUser
+  );
+
   //DELETE USER
   router.delete(
     "/deleteUser/:id",

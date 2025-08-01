@@ -135,6 +135,38 @@ export class UserController {
     res.status(200).json(usuario);
   };
 
+  // PATHC USER (HOMESCRENN) NAME AND PASSWORD
+  public PatchUser = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const { name, password } = req.body;
+
+    // Validar que el usuario autenticado sea el mismo que el que intenta editar
+    const uidFromToken = req.body.user.id;
+    if (id !== uidFromToken) {
+      return res
+        .status(403)
+        .json({ msg: "No puedes editar a otros usuarios." });
+    }
+
+    //Actualizo el name y password
+    const upDateUser = {
+      name: name,
+      password: password,
+    };
+    if (upDateUser.password) {
+      //   // Encriptar la contraseña
+      const salt = bcrypt.genSaltSync();
+      upDateUser.password = bcrypt.hashSync(upDateUser.password, salt);
+    }
+
+    // Actualizar el usuario y devolver el documento actualizado
+    const usuario = await UserModel.findByIdAndUpdate(id, upDateUser, {
+      new: true,
+    });
+
+    res.status(200).json(usuario);
+  };
+
   //GET BY LIMIT (PAGINATIO)
   public PaginationUser = async (req: Request, res: Response) => {
     const { limite = 5, desde = 0 } = req.query;
