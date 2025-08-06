@@ -4,12 +4,22 @@ import { CategoryModel } from "../presentation/models/category.model";
 import { ProductoModel } from "../presentation/models/product.model";
 import { ClientModel } from "../presentation/models/client.model";
 import { Request } from "express";
-import { Meta } from "express-validator";
+import { CustomValidator, Meta } from "express-validator";
 
 export const UserEmailExist = async (email: String) => {
   const emailExist = await UserModel.findOne({ email });
   if (emailExist) {
     throw new Error(`El correo: ${email}, ya está registrado`);
+  }
+};
+
+export const UserEmailExistUpdate: CustomValidator = async (email, meta) => {
+  const req = meta.req as Request;
+  const userId = req.params.id;
+  const existingUser = await UserModel.findOne({ email });
+
+  if (existingUser && existingUser._id.toString() !== userId) {
+    throw new Error(`El correo: ${email}, ya está registrado por otro usuario`);
   }
 };
 

@@ -31,6 +31,7 @@ export const CategoryRoute = () => {
     "/createCategory",
     [
       validateJWT,
+      validateRole,
       check("name", "El nombre es obligatorio").not().isEmpty(),
       check("state", "El estado es obligatorio").not().isEmpty(),
       validate,
@@ -43,6 +44,7 @@ export const CategoryRoute = () => {
     "/putCategory/:id",
     [
       validateJWT,
+      validateRole,
       check("_id", "El id no se puede cambiar").isEmpty(),
       check("id").custom(CategoryIdExist),
       check("state", "El estado no se puede cambiar").isEmpty(),

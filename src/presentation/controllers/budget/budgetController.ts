@@ -25,74 +25,79 @@ export class BudgetController {
 
   //CREATE NEW BUDGET
   public NewBudget = async (req: Request, res: Response) => {
-    const { user, client, product } = req.body;
-    // Validación y conversión del userId => como yo se que el usuario existe, pq es quien va a crear el presupuesto (y ademas es quien ya se valido al ingresar al sistema) no hago nada respecto a find en su modelo (UserModel)
-    if (!mongoose.Types.ObjectId.isValid(user)) {
-      return res.status(400).json({
-        msg: "El userId no es válido",
-      });
-    }
+    try {
+      const { client, product } = req.body;
 
-    // Validación y conversión del clientId
-    if (!mongoose.Types.ObjectId.isValid(client)) {
-      return res.status(400).json({
-        msg: "El clientId no es válido",
-      });
-    }
+      // Validar clientId
+      if (!mongoose.Types.ObjectId.isValid(client)) {
+        return res.status(400).json({ msg: "El clientId no es válido" });
+      }
 
-    const clientDb = await ClientModel.findById(client);
-    if (!clientDb) {
-      return res.status(400).json({
-        msg: "El cliente no existe",
-      });
-    }
+      const clientDb = await ClientModel.findById(client);
+      if (!clientDb) {
+        return res.status(400).json({ msg: "El cliente no existe" });
+      }
 
-    // Validar cada productId
-    for (const p of product) {
-      if (!mongoose.Types.ObjectId.isValid(p.productId)) {
-        return res.status(400).json({
-          msg: `El productId ${p.productId} no es válido`,
+      // Validar productos y armar lista completa
+      const fullProducts = [];
+
+      for (const p of product) {
+        if (!mongoose.Types.ObjectId.isValid(p.productId)) {
+          return res
+            .status(400)
+            .json({ msg: `El productId ${p.productId} no es válido` });
+        }
+
+        const productDb = await ProductoModel.findById(p.productId);
+        if (!productDb) {
+          return res
+            .status(400)
+            .json({ msg: `El producto con ID ${p.productId} no existe` });
+        }
+
+        fullProducts.push({
+          productId: productDb._id,
+          quantity: p.quantity,
+          name: productDb.name,
+          price: productDb.value,
         });
       }
 
-      const productDb = await ProductoModel.findById(p.productId);
-      if (!productDb) {
-        return res.status(400).json({
-          msg: `El producto con ID ${p.productId} no existe`,
-        });
-      }
-    }
-
-    // Obtener los productos de la base de datos
-    const productIds = product.map((p: any) => p.productId);
-    const productsFromDb = await ProductoModel.find({
-      _id: { $in: productIds },
-    });
-    // Calcular el total
-    let total = 0;
-    product.forEach((p: any) => {
-      const productData = productsFromDb.find(
-        (dbProduct) => dbProduct._id.toString() === p.productId
+      // Calcular el total
+      const total = fullProducts.reduce(
+        (acc, p) => acc + p.quantity * p.price,
+        0
       );
-      if (productData) {
-        total += productData.value * p.quantity;
-      }
-    });
 
-    const NewBudget = await BudgetModel.create({
-      user: req.body.user,
-      client: req.body.client,
-      product: req.body.product,
-      total: total,
-    });
+      // Crear el presupuesto
+      const userId = (req as any).body.user._id;
+      const newBudget = await BudgetModel.create({
+        user: userId, // del token
+        client,
+        product: fullProducts,
+        total,
+      });
 
-    //Guarda en bd
-    await NewBudget.save();
-
-    //Lo que muestro en postman
-    res.status(200).json({
-      msg: "Nuevos presupuesto creado",
-      NewBudget,
-    });
+      res.status(201).json({
+        msg: "Presupuesto creado correctamente",
+        newBudget,
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ msg: "Error al crear el presupuesto" });
+    }
   };
 }
+
+// {
+//   "_id": "ID_DEL_PRESUPUESTO",
+//   "product": [
+//     {
+//       "_id": "ID_DEL_SUBDOCUMENTO",         // 🔹 ID del producto dentro del presupuesto
+//       "productId": "ID_DEL_PRODUCTO_REAL",  // 🔸 Referencia al producto global
+//       "quantity": 5,
+//       "name": "PRODUCTO 1",
+//       "price": 100
+//     }
+//   ]
+// }

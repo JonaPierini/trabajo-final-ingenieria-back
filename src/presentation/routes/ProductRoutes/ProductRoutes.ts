@@ -31,6 +31,7 @@ export const ProductRoute = () => {
     "/createProduct",
     [
       validateJWT,
+      validateRole,
       check("name", "El nombre es obligatorio").not().isEmpty(),
       check("state", "El estado es obligatorio").not().isEmpty(),
       check("value", "El precio es obligatorio").not().isEmpty(),
@@ -47,6 +48,7 @@ export const ProductRoute = () => {
     "/putProduct/:id",
     [
       validateJWT,
+      validateRole,
       check("_id", "El id no se puede cambiar").isEmpty(),
       check("id").custom(ProductIdExist),
       check("state", "El estado no se puede cambiar").isEmpty(),

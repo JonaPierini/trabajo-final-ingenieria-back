@@ -1,7 +1,11 @@
 import { Router } from "express";
 import { UserController } from "../../controllers/users/userController";
 import { check } from "express-validator";
-import { UserEmailExist, UserIdExist } from "../../../helpers/db-validators";
+import {
+  UserEmailExist,
+  UserEmailExistUpdate,
+  UserIdExist,
+} from "../../../helpers/db-validators";
 import { validate } from "../../../middlewares/validate";
 import { validateRole } from "../../../middlewares/validate-role";
 import { validateJWT } from "../../../middlewares/validate-token";
@@ -62,10 +66,13 @@ export const UserRoute = () => {
       validateJWT, // Verifica que el token sea válido
       validateRole, // Verifica que el usuario autenticado sea ADMIN_ROLE
       check("state", "El estado no puede estar vacio").not().isEmpty(),
+      check("name", "El nombre no puede estar vacio").not().isEmpty(),
+      check("email", "Tiene que ser un correo válido").isEmail(),
       check("password", "El password no se puede cambiar").isEmpty(),
       check("rol", "No es un rol válido").isIn(["ADMIN_ROLE", "USER_ROLE"]),
       check("id", "No es un ID válido").isMongoId(),
       check("id").custom(UserIdExist),
+      check("email").custom(UserEmailExistUpdate), //Verifica que el email a actualizar no exista
       validate,
     ],
     userController.PutUser

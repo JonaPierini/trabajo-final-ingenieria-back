@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { ProductoModel } from "../../models/product.model";
+import { CategoryModel } from "../../models/category.model";
 
 export class ProductController {
   constructor() {}
@@ -44,11 +45,19 @@ export class ProductController {
 
     const name = req.body.name.toUpperCase().trim();
 
+    //Verificar si el producto existe
     const productDB = await ProductoModel.findOne({ name });
-
     if (productDB) {
       return res.status(400).json({
         msg: `El producto ${name} ya existe`,
+      });
+    }
+
+    // Verificar si la categoría existe
+    const categoryExists = await CategoryModel.findById(req.body.category);
+    if (!categoryExists) {
+      return res.status(400).json({
+        msg: `La categoría con ID ${req.body.category} no existe`,
       });
     }
 
@@ -59,7 +68,6 @@ export class ProductController {
       value: req.body.value,
       stock: req.body.stock,
       description: req.body.description,
-      user: req.body.user._id,
       category: req.body.category,
     });
 
