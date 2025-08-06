@@ -51,7 +51,6 @@ export const ClientRoute = () => {
     "/putClient/:id",
     [
       check("name", "El nombre no puede estar vacio").not().isEmpty(),
-      //      check("email", "El email no se puede cambiar").not().isEmpty(),
       check("address", "La direccion no puede estar vacia").not().isEmpty(),
       check("location", "La localidad no puede estar vacia").not().isEmpty(),
       check("provinces", "La provincia no puede estar vacia").not().isEmpty(),
@@ -60,7 +59,14 @@ export const ClientRoute = () => {
       check("id").custom(ClientIdExist),
       validate,
     ],
-    clientController.PutUClient
+    clientController.PutClient
+  );
+
+  //DELETE USER = state
+  router.delete(
+    "/deleteClient/:id",
+    [check("id").custom(ClientIdExist), validate],
+    clientController.DeleteClient
   );
 
   //DELETE CLIENT BD

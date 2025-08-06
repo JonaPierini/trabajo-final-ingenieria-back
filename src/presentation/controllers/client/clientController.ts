@@ -47,7 +47,7 @@ export class ClientController {
 
   //UPDATE CLIENT
 
-  public PutUClient = async (req: Request, res: Response) => {
+  public PutClient = async (req: Request, res: Response) => {
     const id = req.params.id;
 
     // Buscamos el cliente actual por ID
@@ -56,13 +56,35 @@ export class ClientController {
       return res.status(404).json({ msg: "Cliente no encontrado" });
     }
 
+    const { name, email, address, location, provinces, state } = req.body;
+
+    const normalizedEmail = email?.toLowerCase();
+
+    // Verificar si el email cambió (case-insensitive)
+    if (
+      normalizedEmail &&
+      normalizedEmail !== clienteActual.email.toLowerCase()
+    ) {
+      const emailExists = await UserModel.findOne({
+        email: normalizedEmail,
+      });
+
+      // Solo bloqueamos si existe y NO es el mismo cliente
+      if (emailExists && emailExists._id.toString() !== id) {
+        return res.status(400).json({
+          msg: "Ya existe un usuario con ese email.",
+        });
+      }
+    }
+
     // Solo actualizamos los campos permitidos
     const upDateClient = {
-      name: req.body.name.toUpperCase(),
-      email: clienteActual.email, //  No permitimos que se modifique
-      address: req.body.address,
-      location: req.body.location,
-      provinces: req.body.provinces,
+      name,
+      email: normalizedEmail,
+      address,
+      location,
+      provinces,
+      state,
     };
 
     const client = await ClientModel.findByIdAndUpdate(id, upDateClient, {
@@ -75,7 +97,22 @@ export class ClientController {
     });
   };
 
-  //DELETE CLIENT
+  //Delete => state
+  public DeleteClient = async (req: Request, res: Response) => {
+    const id = req.params.id;
+    const cliente = await ClientModel.findByIdAndUpdate(
+      id,
+      { state: false },
+      //con el new devuelvo el valor del usuario actualizado
+      { new: true }
+    );
+    res.status(200).json({
+      msg: "Cambio de estado = estado(false)",
+      cliente,
+    });
+  };
+
+  //DELETE CLIENT DB
 
   public DeleteClientDB = async (req: Request, res: Response) => {
     const id = req.params.id;

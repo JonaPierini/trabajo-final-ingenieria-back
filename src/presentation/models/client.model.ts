@@ -23,6 +23,10 @@ const clientSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  state: {
+    type: Boolean,
+    default: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now, // Si no se proporciona, se usará la fecha actual
