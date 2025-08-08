@@ -47,7 +47,6 @@ export const CategoryRoute = () => {
       validateRole,
       check("_id", "El id no se puede cambiar").isEmpty(),
       check("id").custom(CategoryIdExist),
-      check("state", "El estado no se puede cambiar").isEmpty(),
       check("name", "El nombre no puede estar vacio").not().isEmpty(),
       validate,
     ],

@@ -8,8 +8,10 @@ export class CategoryController {
   public AllCategory = async (req: Request, res: Response) => {
     const { limite = 3, desde = 0 } = req.query;
     //Me va a traer aquellas categorias que tengan el estado en true
-    const query = { state: true };
-    const [total, categoria] = await Promise.all([
+    //const query = { state: true  };
+    //Me va a traer todas las categorias (state: true y false)
+    const query = {};
+    const [total, allCategory] = await Promise.all([
       CategoryModel.countDocuments(query),
       CategoryModel.find(query)
         //Funcion de moongoose que te trae, en este caso, el usuario que grabo la categoria
@@ -21,20 +23,20 @@ export class CategoryController {
     res.json({
       msg: "AllCategory",
       total,
-      categoria,
+      allCategory,
     });
   };
 
   //GET CATEGORY BY ID - populate
   public CategoryById = async (req: Request, res: Response) => {
     const id = req.params.id;
-    const categoyById = await CategoryModel.findById(id).populate(
+    const categoryById = await CategoryModel.findById(id).populate(
       "user",
       "name"
     );
     res.json({
       msg: "Categoria encontrada: ",
-      categoyById,
+      categoryById,
     });
   };
 
@@ -54,7 +56,7 @@ export class CategoryController {
 
     //Generar la data en db
     const newCategory = await CategoryModel.create({
-      name: req.body.name.toUpperCase(),
+      name: name,
       state: req.body.state,
       user: req.body.user._id,
     });
@@ -72,16 +74,42 @@ export class CategoryController {
   public PutCategory = async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    //Actualizo el name
+    // Obtenemos los valores enviados en el body
+    const { name, state } = req.body;
+
+    // 1. Verificamos que la categoría con ese ID exista
+    const categoryToUpdate = await CategoryModel.findById(id);
+    if (!categoryToUpdate) {
+      return res.status(404).json({ msg: "Categoría no encontrada." });
+    }
+
+    // 2. Verificamos si el nombre enviado es diferente al actual
+    // 2. Si el nombre cambió, validamos que no exista (sin importar mayúsculas/minúsculas)
+    if (name && name.toUpperCase() !== categoryToUpdate.name.toUpperCase()) {
+      const categoryExists = await CategoryModel.findOne({
+        name: { $regex: `^${name}$`, $options: "i" }, // búsqueda insensible a mayúsculas
+      });
+
+      // Si existe y su ID es diferente a la que estoy actualizando, entonces hay un conflicto
+      if (categoryExists && categoryExists._id.toString() !== id) {
+        return res.status(400).json({
+          msg: "Ya existe una categoría con ese nombre.",
+        });
+      }
+    }
+
+    // 3. Construimos el objeto con los valores actualizados
     const upDateCategory = {
-      name: req.body.name.toUpperCase(),
+      name: name?.toUpperCase() || categoryToUpdate.name, // Usamos el nuevo nombre en mayúsculas, o el anterior si no se envió
+      state: state, // Si se envió el estado, lo usamos, si no dejamos el anterior
     };
 
-    // Actualizar la categoria y devolver el documento actualizado
+    // 4. Actualizamos la categoría y devolvemos el nuevo documento
     const category = await CategoryModel.findByIdAndUpdate(id, upDateCategory, {
-      new: true,
+      new: true, // Para que nos devuelva la categoría ya actualizada
     });
 
+    // 5. Enviamos la categoría actualizada como respuesta
     res.status(200).json(category);
   };
 
