@@ -51,8 +51,10 @@ export class UserController {
     });
   };
 
+  //DELETE USER STATE
   public DeleteUser = async (req: Request, res: Response) => {
     const id = req.params.id;
+    console.log(id);
     const user = await UserModel.findByIdAndUpdate(
       id,
       { state: false },
@@ -65,6 +67,7 @@ export class UserController {
     });
   };
 
+  //DELETE USER DB
   public DeleteUserDB = async (req: Request, res: Response) => {
     const id = req.params.id;
     const user = await UserModel.findByIdAndDelete(id);
@@ -83,56 +86,54 @@ export class UserController {
     });
   };
 
+  //PUT USER
   public PutUser = async (req: Request, res: Response) => {
     const id = req.params.id;
 
-    const loggedUserId = req.body.user._id.toString(); // ID del usuario autenticado
+    // ✅ viene del middleware validateJWT
+    const loggedUserId = (req as any).usuario?._id?.toString();
+    if (!loggedUserId) {
+      return res.status(401).json({ msg: "Token faltante o inválido" });
+    }
 
-    // Impedir que el admin se edite a sí mismo
+    // Impedir que el admin se edite a sí mismo desde esta ruta
     if (id === loggedUserId) {
-      return res.status(403).json({
-        msg: "No podés editarte a vos mismo desde esta ruta.",
-      });
+      return res
+        .status(403)
+        .json({ msg: "No podés editarte a vos mismo desde esta ruta." });
     }
 
     const { name, email, rol, state } = req.body;
 
-    // Verificar si el email cambió
+    // Verificar si el usuario a actualizar existe
     const userToUpdate = await UserModel.findById(id);
     if (!userToUpdate) {
       return res.status(404).json({ msg: "Usuario no encontrado." });
     }
 
+    // Validar email duplicado si lo cambian
     if (email && email !== userToUpdate.email) {
       const emailExists = await UserModel.findOne({ email });
       if (emailExists) {
-        return res.status(400).json({
-          msg: "Ya existe un usuario con ese email.",
-        });
+        return res
+          .status(400)
+          .json({ msg: "Ya existe un usuario con ese email." });
       }
     }
 
-    //Actualizo el  rol, state, email y name
-    const upDateUser = {
-      name: name,
-      email: email,
-      rol: rol,
-      //password: req.body.password,
-      state: state,
-      // createdAt: req.body.createdAt,
+    // Construir update solo con campos permitidos
+    const upDateUser: Partial<typeof userToUpdate> = {
+      name,
+      email,
+      rol,
+      state,
     };
-    // if (upDateUser.password) {
-    //   // Encriptar la contraseña
-    //   const salt = bcrypt.genSaltSync();
-    //   upDateUser.password = bcrypt.hashSync(upDateUser.password, salt);
-    // }
 
-    // Actualizar el usuario y devolver el documento actualizado
     const usuario = await UserModel.findByIdAndUpdate(id, upDateUser, {
       new: true,
     });
 
-    res.status(200).json(usuario);
+    return res.status(200).json(usuario);
   };
 
   // PATHC USER (HOMESCRENN) NAME AND PASSWORD
@@ -140,31 +141,34 @@ export class UserController {
     const id = req.params.id;
     const { name, password } = req.body;
 
-    // Validar que el usuario autenticado sea el mismo que el que intenta editar
-    const uidFromToken = req.body.user.id;
+    // ✅ viene del middleware validateJWT
+    const uidFromToken = (req as any).usuario?._id?.toString();
+    if (!uidFromToken) {
+      return res.status(401).json({ msg: "Token faltante o inválido" });
+    }
+
+    // Solo puede editarse a sí mismo
     if (id !== uidFromToken) {
       return res
         .status(403)
         .json({ msg: "No puedes editar a otros usuarios." });
     }
 
-    //Actualizo el name y password
-    const upDateUser = {
-      name: name,
-      password: password,
-    };
-    if (upDateUser.password) {
-      //   // Encriptar la contraseña
+    // Construir update solo con campos permitidos
+    const upDateUser: Partial<{ name: string; password: string }> = {};
+
+    if (typeof name === "string") upDateUser.name = name.trim();
+
+    if (typeof password === "string" && password.trim().length > 0) {
       const salt = bcrypt.genSaltSync();
-      upDateUser.password = bcrypt.hashSync(upDateUser.password, salt);
+      upDateUser.password = bcrypt.hashSync(password, salt);
     }
 
-    // Actualizar el usuario y devolver el documento actualizado
     const usuario = await UserModel.findByIdAndUpdate(id, upDateUser, {
       new: true,
     });
 
-    res.status(200).json(usuario);
+    return res.status(200).json(usuario);
   };
 
   //GET BY LIMIT (PAGINATIO)

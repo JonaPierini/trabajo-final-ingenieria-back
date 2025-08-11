@@ -101,6 +101,7 @@ export const UserRoute = () => {
       validateJWT,
       validateRole,
       validateDiferenteId,
+      check("id", "id inválido").isMongoId(), // 1) valida formato ObjectId
       check("id").custom(UserIdExist),
       validate,
     ],

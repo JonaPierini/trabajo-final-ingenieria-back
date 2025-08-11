@@ -28,7 +28,7 @@ export const CategoryRoute = () => {
 
   //CREAR CATEGORIA - privado - con token valido (con valideteJWT)
   router.post(
-    "/createCategory",
+    "/newCategory",
     [
       validateJWT,
       validateRole,
@@ -45,7 +45,6 @@ export const CategoryRoute = () => {
     [
       validateJWT,
       validateRole,
-      check("_id", "El id no se puede cambiar").isEmpty(),
       check("id").custom(CategoryIdExist),
       check("name", "El nombre no puede estar vacio").not().isEmpty(),
       validate,

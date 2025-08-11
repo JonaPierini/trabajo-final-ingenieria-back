@@ -7,7 +7,9 @@ export const validateDiferenteId = async (
   res: Response,
   next: NextFunction
 ) => {
-  if (!req.body.user) {
+  //ACA (req.body.user._id) tengo la informacion del usuario que hace la accion porq el midlware anterior que es el validate-token me la otorga
+  const userId = (req as any).usuario?._id?.toString();
+  if (!userId) {
     return res.status(500).json({
       msg: "Se quiere verificar el role sin validar el token primero",
     });
@@ -15,11 +17,8 @@ export const validateDiferenteId = async (
 
   const { id } = req.params;
 
-  //ACA (req.body.user._id) tengo la informacion del usuario que hace la accion porq el midlware anterior que es el validate-token me la otorga
-  const userId = req.body.user._id;
-
   //Encontramos que si el usuario es el mismo no se puede borrar
-  if (id === userId.toString()) {
+  if (id === userId) {
     return res.status(401).json({
       msg: `Oiga no podes borrarte a vos mismo`,
     });

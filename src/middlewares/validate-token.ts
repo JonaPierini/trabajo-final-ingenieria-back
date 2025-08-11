@@ -8,46 +8,35 @@ export const validateJWT = async (
   res: Response,
   next: NextFunction
 ) => {
-  //RECIBIMOS EL TOKEN del cliente y, a partir de ese token, sabemos los datos del cliente (id)
   const token = req.header("x-token");
-
-  if (!token) {
-    return res.status(401).json({
-      msg: "No hay token en la petición - acordate de mandarlo en el header",
-    });
-  }
+  if (!token)
+    return res
+      .status(401)
+      .json({
+        msg: "No hay token en la petición - acordate de mandarlo en el header",
+      });
 
   try {
-    // Verificamos el token y forzamos el tipo del payload
-    //esto es para verificar el token
     const { id } = jwt.verify(token, envs.SECRETORPRIVATEKEY) as JwtPayload;
-
-    // leer el usuario que corresponde al id
     const usuario = await UserModel.findById(id);
+    if (!usuario)
+      return res
+        .status(401)
+        .json({
+          msg: "Token no válido - usuario no existe en la base de datos",
+        });
+    if (!usuario.state)
+      return res
+        .status(401)
+        .json({ msg: "Token no válido - usuario con estado: false" });
 
-    if (!usuario) {
-      return res.status(401).json({
-        msg: "Token no válido - usuario no existe en la base de datos",
-      });
-    }
-
-    // Verificar si el estado del usuario es true
-    if (!usuario.state) {
-      return res.status(401).json({
-        msg: "Token no válido - usuario con estado: false",
-      });
-    }
-
-    // Asignamos al usuario a req.user en lugar de modificar el body
-    //aca le asignamos al req.body.user el usuario encontrado en el modelo
-    req.body.user = usuario;
+    // ✅ Guardar en req.usuario (no en req.body)
+    (req as any).usuario = usuario;
+    // ❌ NO: req.body.user = usuario;
 
     next();
   } catch (error) {
-    console.log(error);
-    return res.status(401).json({
-      msg: "Token no válido",
-    });
+    return res.status(401).json({ msg: "Token no válido" });
   }
 };
 

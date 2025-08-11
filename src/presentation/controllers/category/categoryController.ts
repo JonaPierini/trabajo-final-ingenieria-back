@@ -6,8 +6,8 @@ export class CategoryController {
 
   //GET ALL CATEGORY - Paginado - total - populate (quien grabo)
   public AllCategory = async (req: Request, res: Response) => {
-    const { limite = 3, desde = 0 } = req.query;
-    //Me va a traer aquellas categorias que tengan el estado en true
+    const { limite = 20, desde = 0 } = req.query;
+    //Me va a traer aquellas categorias que tengan el estado en true (comentado)
     //const query = { state: true  };
     //Me va a traer todas las categorias (state: true y false)
     const query = {};
@@ -42,32 +42,30 @@ export class CategoryController {
 
   //CRATE CATEGORY
   public CreateCategory = async (req: Request, res: Response) => {
-    //Crear categoria - privado - con token valido
+    // Defensa: nunca aceptar user en el body
+    if ("user" in req.body) delete req.body.user;
 
-    const name = req.body.name.toUpperCase();
-
+    const name = String(req.body.name || "").toUpperCase();
     const categoryDB = await CategoryModel.findOne({ name });
-
     if (categoryDB) {
-      return res.status(400).json({
-        msg: `La categoria ${name} ya existe`,
-      });
+      return res.status(400).json({ msg: `La categoria ${name} ya existe` });
     }
 
-    //Generar la data en db
+    // Si no viene usuario del middleware → 401
+    const userId = (req as any).usuario?._id;
+    if (!userId) {
+      return res.status(401).json({ msg: "Token faltante o inválido" });
+    }
+
     const newCategory = await CategoryModel.create({
-      name: name,
-      state: req.body.state,
-      user: req.body.user._id,
+      name,
+      state: req.body.state ?? true,
+      user: userId, // ← del middleware, no del body
     });
 
-    //Guarda en bd que no haria falta pq ya arriba se esta creando
     await newCategory.save();
 
-    res.status(200).json({
-      msg: "Categoria Creada",
-      newCategory,
-    });
+    res.status(200).json({ msg: "Categoria Creada", newCategory });
   };
 
   //UPDATE CATEGORY BY ID
