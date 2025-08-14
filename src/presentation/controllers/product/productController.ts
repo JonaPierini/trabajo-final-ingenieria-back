@@ -10,7 +10,7 @@ export class ProductController {
     const { limite = 3, desde = 0 } = req.query;
     //Me va a traer aquellas categorias que tengan el estado en true
     const query = { state: true };
-    const [total, producto] = await Promise.all([
+    const [total, allProduct] = await Promise.all([
       ProductoModel.countDocuments(query),
       ProductoModel.find(query)
         //Funcion de moongoose que te trae, en este caso, el usuario que grabo la categoria
@@ -23,7 +23,7 @@ export class ProductController {
     res.json({
       msg: "AllProduct",
       total,
-      producto,
+      allProduct,
     });
   };
 
@@ -43,7 +43,7 @@ export class ProductController {
   public CreateProduct = async (req: Request, res: Response) => {
     //Crear producto - privado - con token valido
 
-    const name = req.body.name.toUpperCase().trim();
+    const name = req.body.name.toUpperCase().trim(); //nombre producto
 
     //Verificar si el producto existe
     const productDB = await ProductoModel.findOne({ name });
@@ -61,14 +61,28 @@ export class ProductController {
       });
     }
 
+    // Verificar si la categoría esta activa
+    if (!categoryExists.state) {
+      return res.status(400).json({
+        msg: `La categoría con ID ${req.body.category} está inactiva`,
+      });
+    }
+
+    // Si no viene usuario del middleware → 401
+    const userId = (req as any).usuario?._id;
+    if (!userId) {
+      return res.status(401).json({ msg: "Token faltante o inválido" });
+    }
+
     //Generar la data en db le que le pasamos es en el body la category: y el valor es el id de esa categoria
     const newProducto = await ProductoModel.create({
-      name: req.body.name.toUpperCase().trim(),
-      state: req.body.state,
+      name: name,
+      state: req.body.state ?? true,
       value: req.body.value,
       stock: req.body.stock,
       description: req.body.description,
       category: req.body.category,
+      user: userId, // ← del middleware, no del body
     });
 
     //Guarda en bd que no haria falta pq ya arriba se esta creando
