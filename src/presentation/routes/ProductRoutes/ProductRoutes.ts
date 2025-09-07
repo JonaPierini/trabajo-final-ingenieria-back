@@ -51,8 +51,8 @@ export const ProductRoute = () => {
       validateRole,
       check("_id", "El id no se puede cambiar").isEmpty(),
       check("id").custom(ProductIdExist),
-      check("state", "El estado no se puede cambiar").isEmpty(),
       check("name", "El nombre no puede estar vacio").not().isEmpty(),
+      check("category", "No es un ID válido").optional().isMongoId(),
       validate,
     ],
     productController.PutProduct
