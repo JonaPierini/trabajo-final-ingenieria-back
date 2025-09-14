@@ -27,6 +27,11 @@ const budgetSchema = new mongoose.Schema({
       name: { type: Schema.Types.String, ref: "Product", required: true },
     },
   ],
+  state: {
+    type: Boolean,
+    default: true,
+    required: true,
+  },
   total: {
     type: Number,
     default: 0,

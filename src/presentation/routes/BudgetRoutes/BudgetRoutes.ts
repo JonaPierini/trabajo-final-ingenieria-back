@@ -20,12 +20,19 @@ export const BudgetRoute = () => {
     [
       validateJWT, //validamos que tenga token
       validateRole, //validamos que sea admin role
-      check("user", "El id del usuario es obligatorio").not().isEmpty(),
+      //  check("user", "El id del usuario es obligatorio").not().isEmpty(),
       check("client", "El id del cliente es obligatorio").not().isEmpty(),
       check("product", "El id del producto es obligatorio").not().isEmpty(),
       validate,
     ],
     budgetController.NewBudget
+  );
+
+  //BORRAR un presupuesto por id - Todos los usuarios
+  router.delete(
+    "/deleteBudget/:id",
+    [validateJWT, check("id", "No es un ID válido").isMongoId(), validate],
+    budgetController.DeleteBudget
   );
 
   return router;

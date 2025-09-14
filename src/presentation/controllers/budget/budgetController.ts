@@ -28,7 +28,9 @@ export class BudgetController {
     try {
       const { client, product } = req.body;
 
-      // Validar clientId
+      const userId = (req as any).usuario?._id;
+
+      // VALIDAR CLIENTE
       if (!mongoose.Types.ObjectId.isValid(client)) {
         return res.status(400).json({ msg: "El clientId no es válido" });
       }
@@ -36,6 +38,25 @@ export class BudgetController {
       const clientDb = await ClientModel.findById(client);
       if (!clientDb) {
         return res.status(400).json({ msg: "El cliente no existe" });
+      }
+
+      // Verificar si el cliente esta activo
+      if (!clientDb.state) {
+        return res.status(400).json({
+          msg: `El cliente con ID ${req.body.client} está inactivo`,
+        });
+      }
+
+      //VALIDAR PRODUCTO
+
+      // Validar producto duplicados
+      const productIds = product.map((p: any) => p.productId);
+      const uniqueIds = new Set(productIds);
+
+      if (uniqueIds.size !== productIds.length) {
+        return res.status(400).json({
+          msg: "No se permiten productos repetidos en el presupuesto",
+        });
       }
 
       // Validar productos y armar lista completa
@@ -49,6 +70,14 @@ export class BudgetController {
         }
 
         const productDb = await ProductoModel.findById(p.productId);
+
+        // Verificar si el producto esta activo
+        if (!productDb?.state) {
+          return res.status(400).json({
+            msg: `El producto con ID ${p.productId} está inactivo`,
+          });
+        }
+
         if (!productDb) {
           return res
             .status(400)
@@ -60,6 +89,7 @@ export class BudgetController {
           quantity: p.quantity,
           name: productDb.name,
           price: productDb.value,
+          state: req.body.state ?? true,
         });
       }
 
@@ -70,7 +100,7 @@ export class BudgetController {
       );
 
       // Crear el presupuesto
-      const userId = (req as any).body.user._id;
+      //      const userId = (req as any).body.user._id;
       const newBudget = await BudgetModel.create({
         user: userId, // del token
         client,
@@ -85,6 +115,37 @@ export class BudgetController {
     } catch (err) {
       console.error(err);
       res.status(500).json({ msg: "Error al crear el presupuesto" });
+    }
+  };
+
+  //DELETE PRODUCT - state: false
+
+  public DeleteBudget = async (req: Request, res: Response) => {
+    try {
+      const id = req.params.id;
+
+      const budget = await BudgetModel.findByIdAndUpdate(
+        id,
+        { state: false },
+        { new: true }
+      );
+
+      if (!budget) {
+        return res.status(404).json({
+          msg: "Presupuesto no encontrado",
+        });
+      }
+
+      res.status(200).json({
+        msg: "Cambio de estado = estado(false)",
+        budget,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        msg: "Error al eliminar el presupuest",
+        error,
+      });
     }
   };
 }
