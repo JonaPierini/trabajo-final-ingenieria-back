@@ -5,6 +5,7 @@ import { ProductoModel } from "../presentation/models/product.model";
 import { ClientModel } from "../presentation/models/client.model";
 import { Request } from "express";
 import { CustomValidator, Meta } from "express-validator";
+import { BudgetModel } from "../presentation/models/budget.model";
 
 export const UserEmailExist = async (email: String) => {
   const emailExist = await UserModel.findOne({ email });
@@ -55,6 +56,18 @@ export const ProductIdExist = async (id: String) => {
   // Verificar si el ID existe
   const productId = await ProductoModel.findById(id);
   if (!productId) {
+    throw new Error(`El id: ${id}, no existe en la BD`);
+  }
+};
+
+export const BudgetIdExist = async (id: String) => {
+  // Verificar si el id es válido respcto al validObjetId
+  if (!isValidObjectId(id)) {
+    throw new Error(`El id: ${id}, no es un ObjectId válido.`);
+  }
+  // Verificar si el ID existe
+  const budgetId = await BudgetModel.findById(id);
+  if (!budgetId) {
     throw new Error(`El id: ${id}, no existe en la BD`);
   }
 };

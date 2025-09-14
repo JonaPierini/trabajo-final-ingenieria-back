@@ -4,6 +4,7 @@ import { validate } from "../../../middlewares/validate";
 import { BudgetController } from "../../controllers/budget/budgetController";
 import { validateJWT } from "../../../middlewares/validate-token";
 import { validateRole } from "../../../middlewares/validate-role";
+import { BudgetIdExist } from "../../../helpers/db-validators";
 
 export const BudgetRoute = () => {
   const router = Router();
@@ -26,6 +27,28 @@ export const BudgetRoute = () => {
       validate,
     ],
     budgetController.NewBudget
+  );
+
+  //OBTENER una presupuesto por id - publico
+  router.get(
+    "/budgetById/:id",
+    [
+      check("id", "No es un ID válido").isMongoId(),
+      check("id").custom(BudgetIdExist),
+      validate,
+    ],
+    budgetController.BudgetById
+  );
+
+  //ACTUALIZAR budget por id - privado - con token valido
+  router.put(
+    "/putBudget/:id",
+    [
+      validateJWT,
+      check("_id", "El id no se puede cambiar").isEmpty(),
+      validate,
+    ],
+    budgetController.PutBudget
   );
 
   //BORRAR un presupuesto por id - Todos los usuarios
