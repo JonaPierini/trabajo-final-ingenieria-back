@@ -169,35 +169,54 @@ export class BudgetController {
   public PutBudget = async (req: Request, res: Response) => {
     try {
       const { id } = req.params; // id del presupuesto
-      const { client, productId, quantity } = req.body;
+      const { client, productId, quantity, products } = req.body;
 
-      // --- Helpers ---
       const toNum = (v: any) => {
         const n = Number(v);
         return Number.isFinite(n) ? n : 0;
       };
 
-      // --- 1) Validar ID del presupuesto ---
+      // 1) Validar ID del presupuesto
       if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ msg: "El budgetId no es válido" });
       }
 
-      // --- 2) Buscar presupuesto ---
+      // 2) Buscar presupuesto
       const budget = await BudgetModel.findById(id);
       if (!budget) {
         return res.status(404).json({ msg: "El presupuesto no existe" });
       }
 
-      // --- 3) Early return si no hay nada que actualizar ---
+      // 3) Normalizar body a "incomingUpdates"
+      type IncomingUpdate = { productId: string; quantity: number };
+      let incomingUpdates: IncomingUpdate[] = [];
+
+      if (Array.isArray(products)) {
+        incomingUpdates = products.map((p: any) => ({
+          productId: String(p?.productId ?? ""),
+          quantity: Number(p?.quantity),
+        }));
+      } else if (productId !== undefined || quantity !== undefined) {
+        // Soportar formato legacy (un solo producto)
+        if (productId === undefined) {
+          return res.status(400).json({ msg: "Falta productId" });
+        }
+        if (quantity === undefined) {
+          return res.status(400).json({ msg: "Falta quantity" });
+        }
+        incomingUpdates = [
+          { productId: String(productId), quantity: Number(quantity) },
+        ];
+      }
+
       const nothingToUpdate =
-        client === undefined &&
-        productId === undefined &&
-        quantity === undefined;
+        client === undefined && incomingUpdates.length === 0;
+
       if (nothingToUpdate) {
         return res.status(200).json({ msg: "Sin cambios", budget });
       }
 
-      // --- 4) Si viene cliente -> validarlo y actualizarlo ---
+      // 4) Si viene cliente -> validarlo y actualizarlo
       if (client !== undefined) {
         if (!mongoose.Types.ObjectId.isValid(client)) {
           return res.status(400).json({ msg: "El clientId no es válido" });
@@ -212,69 +231,103 @@ export class BudgetController {
         budget.client = clientDb._id;
       }
 
-      // --- 5) Si viene producto/cantidad -> validar y actualizar/agregar ---
+      // 5) Validar/Aplicar productos si hay
       let touchedProduct = false;
 
-      if (productId !== undefined || quantity !== undefined) {
-        // Ambos son requeridos para tocar producto
-        if (productId === undefined) {
-          return res.status(400).json({ msg: "Falta productId" });
+      if (incomingUpdates.length > 0) {
+        // a) Validación básica de cada item
+        for (const u of incomingUpdates) {
+          if (!mongoose.Types.ObjectId.isValid(u.productId)) {
+            return res
+              .status(400)
+              .json({ msg: `El productId no es válido: ${u.productId}` });
+          }
+          if (!Number.isFinite(u.quantity) || u.quantity <= 0) {
+            return res.status(400).json({
+              msg: `La cantidad debe ser un número > 0 para productId: ${u.productId}`,
+            });
+          }
         }
-        if (quantity === undefined) {
-          return res.status(400).json({ msg: "Falta quantity" });
+
+        // b) (opcional) Resolver duplicados en el array: último gana
+        const dedupMap = new Map<string, number>();
+        for (const u of incomingUpdates) {
+          dedupMap.set(u.productId, u.quantity);
+        }
+        const dedupUpdates: IncomingUpdate[] = Array.from(
+          dedupMap,
+          ([productId, quantity]) => ({ productId, quantity })
+        );
+
+        // c) Cargar productos desde BD en un batch
+        const ids = dedupUpdates.map((u) => u.productId);
+        const productsDb = await ProductoModel.find({ _id: { $in: ids } });
+        const prodMap = new Map<string, any>();
+        for (const p of productsDb) {
+          prodMap.set(String(p._id), p);
+        }
+
+        // d) Validar existencia/estado y aplicar cambios
+        for (const u of dedupUpdates) {
+          const productDb = prodMap.get(u.productId);
+          if (!productDb) {
+            return res
+              .status(400)
+              .json({ msg: `El producto no existe: ${u.productId}` });
+          }
+          if (!productDb.state) {
+            return res.status(400).json({
+              msg: `El producto está inactivo: ${
+                productDb.name ?? u.productId
+              }`,
+            });
+          }
+
+          const existing = (budget.product as any[]).find(
+            (p) => String(p.productId) === String(u.productId)
+          );
+
+          if (existing) {
+            existing.quantity = toNum(u.quantity);
+            if (!Number.isFinite(Number(existing.price))) {
+              existing.price = toNum(productDb.value);
+            }
+            // (opcional) actualizar nombre por si cambió en catálogo
+            if (productDb.name && existing.name !== productDb.name) {
+              existing.name = productDb.name;
+            }
+          } else {
+            (budget.product as any[]).push({
+              productId: productDb._id,
+              quantity: toNum(u.quantity),
+              name: productDb.name,
+              price: toNum(productDb.value),
+              state: true,
+            });
+          }
+        }
+
+        if (Array.isArray(products) && products.length > 0) {
+          // Pruning in-place para DocumentArray
+          const keepSet = new Set(dedupUpdates.map((u) => String(u.productId)));
+          const arr = budget.product as any[]; // o tipalo como Types.DocumentArray si querés
+
+          for (let i = arr.length - 1; i >= 0; i--) {
+            const item = arr[i];
+            if (!keepSet.has(String(item.productId))) {
+              arr.splice(i, 1); // <- esto sí funciona con DocumentArray
+              // alternativamente: (budget.product as any).pull(item._id);
+            }
+          }
         }
 
         touchedProduct = true;
-
-        if (!mongoose.Types.ObjectId.isValid(productId)) {
-          return res.status(400).json({ msg: "El productId no es válido" });
-        }
-
-        const q = Number(quantity);
-        if (!Number.isFinite(q) || q <= 0) {
-          return res
-            .status(400)
-            .json({ msg: "La cantidad debe ser un número > 0" });
-        }
-
-        const productDb = await ProductoModel.findById(productId);
-        if (!productDb) {
-          return res.status(400).json({ msg: "El producto no existe" });
-        }
-        if (!productDb.state) {
-          return res.status(400).json({ msg: "El producto está inactivo" });
-        }
-
-        // Buscar si el producto ya existe en el presupuesto
-        const existing = (budget.product as any[]).find(
-          (p) => p.productId.toString() === String(productId)
-        );
-
-        if (existing) {
-          // Actualizar cantidad
-          existing.quantity = q;
-          // Asegurar price válido (por si el dato viejo no lo tenía)
-          if (!Number.isFinite(Number(existing.price))) {
-            existing.price = toNum(productDb.value);
-          }
-        } else {
-          // Agregar producto nuevo
-          (budget.product as any[]).push({
-            productId: productDb._id,
-            quantity: q,
-            name: productDb.name,
-            price: toNum(productDb.value),
-            state: true,
-          });
-        }
       }
 
-      // --- 6) Recalcular total SOLO si se tocó el producto ---
+      // 6) Recalcular total SOLO si se tocaron productos
       if (touchedProduct) {
         for (const item of budget.product as any[]) {
           item.quantity = toNum(item.quantity);
-
-          // Hidratar price desde BD si falta o no es numérico
           if (!Number.isFinite(Number(item.price))) {
             const prod = await ProductoModel.findById(item.productId).select(
               "value"
@@ -282,24 +335,20 @@ export class BudgetController {
             item.price = toNum(prod?.value);
           }
         }
-
         const sum = (budget.product as any[]).reduce(
           (acc, p) => acc + toNum(p.quantity) * toNum(p.price),
           0
         );
-
-        budget.total = Number.isFinite(sum) ? sum : 0; // nunca NaN
+        budget.total = Number.isFinite(sum) ? sum : 0;
       }
 
-      // --- 7) Guardar y responder ---
-
+      // 7) Guardar y responder
       await budget.save();
 
-      // volver a buscar el presupuesto actualizado y poblar relaciones
       const populatedBudget = await BudgetModel.findById(budget._id)
         .populate("user")
         .populate("client")
-        .populate("product.productId"); // 👈 este es el correcto
+        .populate("product.productId");
 
       return res.status(200).json({
         msg: "Presupuesto actualizado correctamente",
