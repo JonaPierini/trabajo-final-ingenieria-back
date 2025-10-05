@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { BudgetModel } from "../../models/budget.model";
-import { UserModel } from "../../models/user.model";
 import { ClientModel } from "../../models/client.model";
 import { ProductoModel } from "../../models/product.model";
 import mongoose from "mongoose";

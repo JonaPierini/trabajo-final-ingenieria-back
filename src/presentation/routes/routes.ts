@@ -6,6 +6,7 @@ import { ProductRoute } from "./ProductRoutes/ProductRoutes";
 import { SearchRoute } from "./SearchRoutes/SearchRoutes";
 import { ClientRoute } from "./ClientRoutes/ClientRoutes";
 import { BudgetRoute } from "./BudgetRoutes/BudgetRoutes";
+import { SaleRoute } from "./SaleRoutes/SaleRoutes";
 
 export class AppRoutes {
   static get routes(): Router {
@@ -31,6 +32,9 @@ export class AppRoutes {
 
     //BUDGET
     router.use("/api", BudgetRoute());
+
+    //SALE
+    router.use("/api", SaleRoute());
 
     return router;
   }
